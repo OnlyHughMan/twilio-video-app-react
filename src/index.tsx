@@ -1,22 +1,18 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
+import CssBaseline from '@mui/material/CssBaseline';
+import { ThemeProvider } from '@mui/material/styles';
 
-import { CssBaseline } from '@material-ui/core';
-import { MuiThemeProvider } from '@material-ui/core/styles';
-
-import App from './App';
 import AppStateProvider, { useAppState } from './state';
-import { BrowserRouter as Router, Redirect, Route, Switch } from 'react-router-dom';
 import ErrorDialog from './components/ErrorDialog/ErrorDialog';
-import LoginPage from './components/LoginPage/LoginPage';
-import PrivateRoute from './components/PrivateRoute/PrivateRoute';
-import theme from './theme';
-import './types';
 import { ChatProvider } from './components/ChatProvider';
 import { ParticipantProvider } from './components/ParticipantProvider';
+import UnsupportedBrowserWarning from './components/UnsupportedBrowserWarning/UnsupportedBrowserWarning';
 import { VideoProvider } from './components/VideoProvider';
 import useConnectionOptions from './utils/useConnectionOptions/useConnectionOptions';
-import UnsupportedBrowserWarning from './components/UnsupportedBrowserWarning/UnsupportedBrowserWarning';
+import ModernApp from './modern/ModernApp';
+import theme from './theme';
+import './index.css';
 
 const VideoApp = () => {
   const { error, setError } = useAppState();
@@ -24,38 +20,35 @@ const VideoApp = () => {
 
   return (
     <VideoProvider options={connectionOptions} onError={setError}>
-      <ErrorDialog dismissError={() => setError(null)} error={error} />
       <ParticipantProvider>
         <ChatProvider>
-          <App />
+          <ModernApp />
+          <ErrorDialog dismissError={() => setError(null)} error={error} />
         </ChatProvider>
       </ParticipantProvider>
     </VideoProvider>
   );
 };
 
-export const ReactApp = () => (
-  <MuiThemeProvider theme={theme}>
+const Root = () => (
+  <ThemeProvider theme={theme}>
     <CssBaseline />
     <UnsupportedBrowserWarning>
-      <Router>
-        <AppStateProvider>
-          <Switch>
-            <PrivateRoute exact path="/">
-              <VideoApp />
-            </PrivateRoute>
-            <PrivateRoute path="/room/:URLRoomName">
-              <VideoApp />
-            </PrivateRoute>
-            <Route path="/login">
-              <LoginPage />
-            </Route>
-            <Redirect to="/" />
-          </Switch>
-        </AppStateProvider>
-      </Router>
+      <AppStateProvider>
+        <VideoApp />
+      </AppStateProvider>
     </UnsupportedBrowserWarning>
-  </MuiThemeProvider>
+  </ThemeProvider>
 );
 
-ReactDOM.render(<ReactApp />, document.getElementById('root'));
+const container = document.getElementById('root');
+if (!container) {
+  throw new Error('Root container missing');
+}
+
+const root = createRoot(container);
+root.render(
+  <React.StrictMode>
+    <Root />
+  </React.StrictMode>
+);
